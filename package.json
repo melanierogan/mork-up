@@ -20,6 +20,8 @@
   "author": "melanie rogan",
   "license": "ISC",
   "dependencies": {
+    "fs": "0.0.1-security",
+    "ics": "^2.24.0",
     "optiic": "0.0.6"
   }
 }
