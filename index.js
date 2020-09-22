@@ -3,7 +3,7 @@ const optiic = new (require('optiic'))({
 });
 
 let options = {
-	image: './images/test4.JPG', // url of the image
+	image: './images/test5.JPG', // url of the image
 	mode: 'ocr', // ocr
 };
 
