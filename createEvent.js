@@ -25,6 +25,7 @@ const relevantDates = allDates.filter(date => !dateRangeArray.includes(date));
 //i am working off the unconfirmed assumption that the date range will
 //always be the first two elements of the allDates array.
 const appointmentDates = allDates.splice(2);
+console.log(allDescriptions, 'what is it now?');
 
 
 const formatTime = time => {
@@ -66,8 +67,8 @@ populateEvent.productId = 'mork';
 let diaryEvents = [];
 for (let i=0; i < appointmentDates.length; i++) {
 	diaryEvents[i] = {
-		title: '',
-		description: '',
+		title: 'Hospital Appointment',
+		description: allDescriptions[i],
 		start: formatDate(appointmentDates[i]),
 		duration: { minutes: 15 },
 		productId: 'mork',
