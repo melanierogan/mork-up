@@ -104,7 +104,6 @@ console.log(diaryEvents)
 
 const { error, value } = ics.createEvents(
 	diaryEvents
-	// sampleStockEvent
 );
 
 if (error) {
