@@ -21,12 +21,10 @@ const replaceNewline = sampleEventPhoto.text.replace(/\n/g, ' ');
 const totalNumberOfAppointments = replaceNewline.match(/Scheduled:* ([\d.]+)/)[1];
 const relevantDates = allDates.filter(date => !dateRangeArray.includes(date));
 
-//remove the first two dates which are the range - this needs steadying
 //i am working off the unconfirmed assumption that the date range will
 //always be the first two elements of the allDates array.
 const appointmentDates = allDates.splice(2);
-console.log(allDescriptions, 'what is it now?');
-
+const appointmentTimes = allTimes.splice(1);
 
 const formatTime = time => {
 	const oneTime = time.split(':');
@@ -34,26 +32,45 @@ const formatTime = time => {
 	formattedMinute = oneTime[1];
 	let result;
 	if (formattedHour < 18) {
-		result = [formattedHour, formattedMinute];
+		let formattedArray = [formattedHour, formattedMinute];
+		result = formattedArray.map(function(x) {
+			return parseInt(x, 10);
+		});
 	}
-	return {result};
+	return result;
+}
+
+let formattedTimes = []
+for (let index = 0; index < appointmentTimes.length; index++) {
+	const element = appointmentTimes[index];
+	let result = formatTime(element);
+	formattedTimes.push(result);
 }
 
 //format the date to ics format
 // { weeks, days, hours, minutes, seconds }
 // [2000, 1, 5, 10, 0] (January 5, 2000)
-const formatDate = date => {
+const formatDate = (date, time) => {
 	const oneDate = date.split('/');
 	// being explicit here to make this more readable
 	formattedDay = oneDate[0];
 	formattedMonth = oneDate[1];
 	formattedYear = oneDate[2];
-	const formattedDateArray = [formattedYear, formattedMonth, formattedDay, '10', '10'];
+	const formattedDateArray = [formattedYear, formattedMonth, formattedDay];
 	const result = formattedDateArray.map(function(x) {
 		return parseInt(x, 10);
 	});
 	return result;
 };
+
+let formattedDates = []
+for (let index = 0; index < appointmentDates.length; index++) {
+	const element = appointmentDates[index];
+	let result = formatDate(element);
+	formattedDates.push(result.concat(formattedTimes[index]));
+}
+
+console.log(formattedDates, 'both maybe?');
 
 //start populating everything into an object for createEvent()
 //another perhaps more readable way to do this
@@ -69,7 +86,7 @@ for (let i=0; i < appointmentDates.length; i++) {
 	diaryEvents[i] = {
 		title: 'Hospital Appointment',
 		description: allDescriptions[i],
-		start: formatDate(appointmentDates[i]),
+		start: formattedDates[i],
 		duration: { minutes: 15 },
 		productId: 'mork',
 	}
@@ -83,11 +100,12 @@ const sampleStockEvent =   {
 	duration: { minutes: 45 },
 	productId: 'mork',
 };
+console.log(diaryEvents)
 
-const { error, value } = ics.createEvents([
-	populateEvent
+const { error, value } = ics.createEvents(
+	diaryEvents
 	// sampleStockEvent
-]);
+);
 
 if (error) {
   console.log(error)
