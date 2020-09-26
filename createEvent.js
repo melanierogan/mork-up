@@ -1,9 +1,12 @@
 const ics = require('ics');
 const { processImage } = require('./convertImage');
+const { writeFileSync } = require('fs');
 
-const value = async () => {
+const createEvent = async () => {
 	try {
-		const resolved = await processImage();
+		console.log('>>>> NOW TRYING <<<<<<<');
+		const resolved = await processImage;
+		console.log(resolved, 'what we get');
 		//do the work to get all the dates, times, location, description information
 		const allDates = resolved.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
 		const dateRange = resolved.text.match(
@@ -71,17 +74,6 @@ const value = async () => {
 			formattedDates.push(result.concat(formattedTimes[index]));
 		}
 
-		console.log(formattedDates, 'both maybe?');
-
-		//start populating everything into an object for createEvent()
-		//another perhaps more readable way to do this
-		// const populateEvent = new Object();
-		// populateEvent.title = 'test';
-		// populateEvent.description = 'description';
-		// populateEvent.start = formatDate(allDates[0]);
-		// populateEvent.duration = { minutes: 15 }
-		// populateEvent.productId = 'mork';
-
 		let diaryEvents = [];
 		for (let i = 0; i < appointmentDates.length; i++) {
 			diaryEvents[i] = {
@@ -103,10 +95,11 @@ const value = async () => {
 		}
 
 		//what do we get when we run
-		// console.log(value)
+		console.log(value)
+		writeFileSync(`${__dirname}/events/event.ics`, value);
 	} catch (error) {
 		console.log(error);
 	}
 };
 
-module.exports = { value };
+module.exports = { createEvent };

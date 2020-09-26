@@ -9,7 +9,6 @@ let options = {
 };
 
 let processImage = optiic.process(options).then(result => {
-	console.log(result);
 	return result;
 });
 
