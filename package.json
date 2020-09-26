@@ -4,7 +4,9 @@
   "description": "read appointment times from an image of your appointment sheet from hospital",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm test",
+    "start": "node index.js",
+    "dev": "nodemon"
   },
   "keywords": [
     "photo",
@@ -20,9 +22,15 @@
   "author": "melanie rogan",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
+    "express-handlebars": "^5.1.0",
     "fs": "0.0.1-security",
+    "http-server": "^0.12.3",
     "ics": "^2.24.0",
     "lodash": "^4.17.20",
     "optiic": "0.0.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
   }
 }
