@@ -1,12 +1,8 @@
-const optiic = new (require('optiic'))({
-	apiKey: '', // Not required, but having one removes limits (get your key at https://optiic.dev).
-});
+const { error, value } = require('./createEvent');
+const { writeFileSync } = require('fs');
 
-let options = {
-	image: './images/test5.JPG', // url of the image
-	mode: 'ocr', // ocr
-};
+//what do we get when we run
+console.log(value);
 
-optiic.process(options).then(result => {
-	console.log(result);
-});
+//ics file saved to folder
+writeFileSync(`${__dirname}/events/event.ics`, value);

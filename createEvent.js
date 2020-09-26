@@ -1,120 +1,112 @@
 const ics = require('ics');
-const { writeFileSync } = require('fs');
-const lodash = require('lodash');
+const { processImage } = require('./convertImage');
 
-//the below would normally be 'event'
-const sampleEventPhoto = {
-	text:
-	'X Clinic - RO\nRun by: YY\n17/09 2020 20:38 32\nSchedule for: BLOGGS, K\nSchedule Dates: 21/09/2020 to 25/09/2020\nPatient ID - MRN: ABC123\nClinical Status: On Tx\nDate\nPri St Sts\nTime Dur Activity\n15:15 0:15 5733\nDescription\nQuinn IMRT\nDept\nGC\nLoc\nVER\n21/09/2020\nKM\n22/09/2020\n12:00 0:15 5733\nQuinn IMRT\nGC\nVER\nKM\n23/09/2020\n11:15 0:15 5733\nQuinn IMRT\nGC\nVER\nKM\n24/09/2020\n12:30 0:15 5733\nQuinn IMRT\nGC\nVER\nKM\n25/09/2020\n15:30 0:15 5733\nQuinn IMRT\nGC\nVER\nKM\nTotal Activities Scheduled:\n5',
-	language: 'en',
-};
+const value = async () => {
+	try {
+		const resolved = await processImage();
+		//do the work to get all the dates, times, location, description information
+		const allDates = resolved.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
+		const dateRange = resolved.text.match(
+			/\d{2}([\/.-])\d{2}\1\d{4}\s\w[to]\s\d{2}([\/.-])\d{2}\1\d{4}/g,
+		);
+		const dateRangeArray = dateRange[0].split(' to ');
 
-//do the work to get all the dates, times, location, description information
-const allDates = sampleEventPhoto.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
-const dateRange = sampleEventPhoto.text.match(/\d{2}([\/.-])\d{2}\1\d{4}\s\w[to]\s\d{2}([\/.-])\d{2}\1\d{4}/g);
-const dateRangeArray = dateRange[0].split(' to ');
+		const allTimes = resolved.text.match(/\d{2}([\:])\d{2}/g);
+		const allDescriptions = resolved.text.match(/Quinn IMRT/g);
+		const eachLineInArray = resolved.text.split('\n');
+		const replaceNewline = resolved.text.replace(/\n/g, ' ');
+		const totalNumberOfAppointments = replaceNewline.match(
+			/Scheduled:* ([\d.]+)/,
+		)[1];
+		const relevantDates = allDates.filter(
+			date => !dateRangeArray.includes(date),
+		);
 
-const allTimes = sampleEventPhoto.text.match(/\d{2}([\:])\d{2}/g);
-const allDescriptions = sampleEventPhoto.text.match(/Quinn IMRT/g);
-const eachLineInArray = sampleEventPhoto.text.split('\n');
-const replaceNewline = sampleEventPhoto.text.replace(/\n/g, ' ');
-const totalNumberOfAppointments = replaceNewline.match(/Scheduled:* ([\d.]+)/)[1];
-const relevantDates = allDates.filter(date => !dateRangeArray.includes(date));
+		//i am working off the unconfirmed assumption that the date range will
+		//always be the first two elements of the allDates array.
+		const appointmentDates = allDates.splice(2);
+		const appointmentTimes = allTimes.splice(1);
 
-//i am working off the unconfirmed assumption that the date range will
-//always be the first two elements of the allDates array.
-const appointmentDates = allDates.splice(2);
-const appointmentTimes = allTimes.splice(1);
+		const formatTime = time => {
+			const oneTime = time.split(':');
+			formattedHour = oneTime[0];
+			formattedMinute = oneTime[1];
+			let result;
+			if (formattedHour < 18) {
+				let formattedArray = [formattedHour, formattedMinute];
+				result = formattedArray.map(function(x) {
+					return parseInt(x, 10);
+				});
+			}
+			return result;
+		};
 
-const formatTime = time => {
-	const oneTime = time.split(':');
-	formattedHour = oneTime[0];
-	formattedMinute = oneTime[1];
-	let result;
-	if (formattedHour < 18) {
-		let formattedArray = [formattedHour, formattedMinute];
-		result = formattedArray.map(function(x) {
-			return parseInt(x, 10);
-		});
+		let formattedTimes = [];
+		for (let index = 0; index < appointmentTimes.length; index++) {
+			const element = appointmentTimes[index];
+			let result = formatTime(element);
+			formattedTimes.push(result);
+		}
+
+		//format the date to ics format
+		// { weeks, days, hours, minutes, seconds }
+		// [2000, 1, 5, 10, 0] (January 5, 2000)
+		const formatDate = (date, time) => {
+			const oneDate = date.split('/');
+			// being explicit here to make this more readable
+			formattedDay = oneDate[0];
+			formattedMonth = oneDate[1];
+			formattedYear = oneDate[2];
+			const formattedDateArray = [formattedYear, formattedMonth, formattedDay];
+			const result = formattedDateArray.map(function(x) {
+				return parseInt(x, 10);
+			});
+			return result;
+		};
+
+		let formattedDates = [];
+		for (let index = 0; index < appointmentDates.length; index++) {
+			const element = appointmentDates[index];
+			let result = formatDate(element);
+			formattedDates.push(result.concat(formattedTimes[index]));
+		}
+
+		console.log(formattedDates, 'both maybe?');
+
+		//start populating everything into an object for createEvent()
+		//another perhaps more readable way to do this
+		// const populateEvent = new Object();
+		// populateEvent.title = 'test';
+		// populateEvent.description = 'description';
+		// populateEvent.start = formatDate(allDates[0]);
+		// populateEvent.duration = { minutes: 15 }
+		// populateEvent.productId = 'mork';
+
+		let diaryEvents = [];
+		for (let i = 0; i < appointmentDates.length; i++) {
+			diaryEvents[i] = {
+				title: 'Hospital Appointment',
+				description: allDescriptions[i],
+				start: formattedDates[i],
+				//ideally below will not be hardcoded
+				duration: { minutes: 15 },
+				productId: 'mork',
+			};
+		}
+
+		const { error, value } = ics.createEvents(diaryEvents);
+		console.log(value, 'i dunno');
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		//what do we get when we run
+		// console.log(value)
+	} catch (error) {
+		console.log(error);
 	}
-	return result;
-}
-
-let formattedTimes = []
-for (let index = 0; index < appointmentTimes.length; index++) {
-	const element = appointmentTimes[index];
-	let result = formatTime(element);
-	formattedTimes.push(result);
-}
-
-//format the date to ics format
-// { weeks, days, hours, minutes, seconds }
-// [2000, 1, 5, 10, 0] (January 5, 2000)
-const formatDate = (date, time) => {
-	const oneDate = date.split('/');
-	// being explicit here to make this more readable
-	formattedDay = oneDate[0];
-	formattedMonth = oneDate[1];
-	formattedYear = oneDate[2];
-	const formattedDateArray = [formattedYear, formattedMonth, formattedDay];
-	const result = formattedDateArray.map(function(x) {
-		return parseInt(x, 10);
-	});
-	return result;
 };
 
-let formattedDates = []
-for (let index = 0; index < appointmentDates.length; index++) {
-	const element = appointmentDates[index];
-	let result = formatDate(element);
-	formattedDates.push(result.concat(formattedTimes[index]));
-}
-
-console.log(formattedDates, 'both maybe?');
-
-//start populating everything into an object for createEvent()
-//another perhaps more readable way to do this
-const populateEvent = new Object();
-populateEvent.title = 'test';
-populateEvent.description = 'description';
-populateEvent.start = formatDate(allDates[0]);
-populateEvent.duration = { minutes: 15 }
-populateEvent.productId = 'mork';
-
-let diaryEvents = [];
-for (let i=0; i < appointmentDates.length; i++) {
-	diaryEvents[i] = {
-		title: 'Hospital Appointment',
-		description: allDescriptions[i],
-		start: formattedDates[i],
-		duration: { minutes: 15 },
-		productId: 'mork',
-	}
-};
-console.log(diaryEvents, 'what we get?');
-
-//a sample event to test with
-const sampleStockEvent =   {
-	title: 'Lunch',
-	start: formatDate(allDates[0]),
-	duration: { minutes: 45 },
-	productId: 'mork',
-};
-console.log(diaryEvents)
-
-const { error, value } = ics.createEvents(
-	diaryEvents
-);
-
-if (error) {
-  console.log(error)
-  return
-};
-
-//what do we get when we run
-console.log(value)
-
-//ics file saved to folder
-writeFileSync(`${__dirname}/events/event.ics`, value)
-
-module.exports = { error, value };
+module.exports = { value };

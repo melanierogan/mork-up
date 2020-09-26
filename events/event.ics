@@ -1,47 +1,107 @@
-BEGIN:VCALENDAR
-VERSION:2.0
-CALSCALE:GREGORIAN
-PRODID:mork
-METHOD:PUBLISH
-X-PUBLISHED-TTL:PT1H
-BEGIN:VEVENT
-UID:f68f05a7-ea0b-4d85-9744-df95884ef72e
-SUMMARY:Hospital Appointment
-DTSTAMP:20200926T130414Z
-DTSTART:20200921T141500Z
-DESCRIPTION:Quinn IMRT
-DURATION:PT15M
-END:VEVENT
-BEGIN:VEVENT
-UID:0c4a7d17-db8f-4e34-9504-4c27fcb1c53c
-SUMMARY:Hospital Appointment
-DTSTAMP:20200926T130414Z
-DTSTART:20200922T110000Z
-DESCRIPTION:Quinn IMRT
-DURATION:PT15M
-END:VEVENT
-BEGIN:VEVENT
-UID:47c6a77e-15b0-4c8c-84a2-7a658bc0f4fb
-SUMMARY:Hospital Appointment
-DTSTAMP:20200926T130414Z
-DTSTART:20200923T101500Z
-DESCRIPTION:Quinn IMRT
-DURATION:PT15M
-END:VEVENT
-BEGIN:VEVENT
-UID:0fd8e8b3-4411-43fe-90d6-486f98f03c2d
-SUMMARY:Hospital Appointment
-DTSTAMP:20200926T130414Z
-DTSTART:20200924T113000Z
-DESCRIPTION:Quinn IMRT
-DURATION:PT15M
-END:VEVENT
-BEGIN:VEVENT
-UID:839c1f1a-e6bb-42bd-a858-ef714eae4320
-SUMMARY:Hospital Appointment
-DTSTAMP:20200926T130414Z
-DTSTART:20200925T143000Z
-DESCRIPTION:Quinn IMRT
-DURATION:PT15M
-END:VEVENT
-END:VCALENDAR
+async () => {
+	try {
+		const resolved = await processImage();
+		//do the work to get all the dates, times, location, description information
+		const allDates = resolved.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
+		const dateRange = resolved.text.match(
+			/\d{2}([\/.-])\d{2}\1\d{4}\s\w[to]\s\d{2}([\/.-])\d{2}\1\d{4}/g,
+		);
+		const dateRangeArray = dateRange[0].split(' to ');
+
+		const allTimes = resolved.text.match(/\d{2}([\:])\d{2}/g);
+		const allDescriptions = resolved.text.match(/Quinn IMRT/g);
+		const eachLineInArray = resolved.text.split('\n');
+		const replaceNewline = resolved.text.replace(/\n/g, ' ');
+		const totalNumberOfAppointments = replaceNewline.match(
+			/Scheduled:* ([\d.]+)/,
+		)[1];
+		const relevantDates = allDates.filter(
+			date => !dateRangeArray.includes(date),
+		);
+
+		//i am working off the unconfirmed assumption that the date range will
+		//always be the first two elements of the allDates array.
+		const appointmentDates = allDates.splice(2);
+		const appointmentTimes = allTimes.splice(1);
+
+		const formatTime = time => {
+			const oneTime = time.split(':');
+			formattedHour = oneTime[0];
+			formattedMinute = oneTime[1];
+			let result;
+			if (formattedHour < 18) {
+				let formattedArray = [formattedHour, formattedMinute];
+				result = formattedArray.map(function(x) {
+					return parseInt(x, 10);
+				});
+			}
+			return result;
+		};
+
+		let formattedTimes = [];
+		for (let index = 0; index < appointmentTimes.length; index++) {
+			const element = appointmentTimes[index];
+			let result = formatTime(element);
+			formattedTimes.push(result);
+		}
+
+		//format the date to ics format
+		// { weeks, days, hours, minutes, seconds }
+		// [2000, 1, 5, 10, 0] (January 5, 2000)
+		const formatDate = (date, time) => {
+			const oneDate = date.split('/');
+			// being explicit here to make this more readable
+			formattedDay = oneDate[0];
+			formattedMonth = oneDate[1];
+			formattedYear = oneDate[2];
+			const formattedDateArray = [formattedYear, formattedMonth, formattedDay];
+			const result = formattedDateArray.map(function(x) {
+				return parseInt(x, 10);
+			});
+			return result;
+		};
+
+		let formattedDates = [];
+		for (let index = 0; index < appointmentDates.length; index++) {
+			const element = appointmentDates[index];
+			let result = formatDate(element);
+			formattedDates.push(result.concat(formattedTimes[index]));
+		}
+
+		console.log(formattedDates, 'both maybe?');
+
+		//start populating everything into an object for createEvent()
+		//another perhaps more readable way to do this
+		// const populateEvent = new Object();
+		// populateEvent.title = 'test';
+		// populateEvent.description = 'description';
+		// populateEvent.start = formatDate(allDates[0]);
+		// populateEvent.duration = { minutes: 15 }
+		// populateEvent.productId = 'mork';
+
+		let diaryEvents = [];
+		for (let i = 0; i < appointmentDates.length; i++) {
+			diaryEvents[i] = {
+				title: 'Hospital Appointment',
+				description: allDescriptions[i],
+				start: formattedDates[i],
+				//ideally below will not be hardcoded
+				duration: { minutes: 15 },
+				productId: 'mork',
+			};
+		}
+
+		const { error, value } = ics.createEvents(diaryEvents);
+		console.log(value, 'i dunno');
+
+		if (error) {
+			console.log(error);
+			return;
+		}
+
+		//what do we get when we run
+		// console.log(value)
+	} catch (error) {
+		console.log(error);
+	}
+}
