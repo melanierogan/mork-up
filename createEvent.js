@@ -1,5 +1,6 @@
 const ics = require('ics');
 const { writeFileSync } = require('fs');
+const lodash = require('lodash');
 
 //the below would normally be 'event'
 const sampleEventPhoto = {
@@ -9,13 +10,33 @@ const sampleEventPhoto = {
 };
 
 //do the work to get all the dates, times, location, description information
-const fetchDateRange = sampleEventPhoto.text.match(/\d{2}([\/.-])\d{2}\1\d{4}\s\w[to]\s\d{2}([\/.-])\d{2}\1\d{4}/g);
 const allDates = sampleEventPhoto.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
-const eachLineInArray = sampleEventPhoto.text.split('\n');
-const findTime = sampleEventPhoto.text.match(/\d{2}([\:])\d{2}/g);
-const replaceNewline = sampleEventPhoto.text.replace(/\n/g, ' ');
-const fetchNumberOfAppointments = replaceNewline.match(/Scheduled:* ([\d.]+)/)[1];
+const dateRange = sampleEventPhoto.text.match(/\d{2}([\/.-])\d{2}\1\d{4}\s\w[to]\s\d{2}([\/.-])\d{2}\1\d{4}/g);
+const dateRangeArray = dateRange[0].split(' to ');
 
+const allTimes = sampleEventPhoto.text.match(/\d{2}([\:])\d{2}/g);
+const allDescriptions = sampleEventPhoto.text.match(/Quinn IMRT/g);
+const eachLineInArray = sampleEventPhoto.text.split('\n');
+const replaceNewline = sampleEventPhoto.text.replace(/\n/g, ' ');
+const totalNumberOfAppointments = replaceNewline.match(/Scheduled:* ([\d.]+)/)[1];
+const relevantDates = allDates.filter(date => !dateRangeArray.includes(date));
+
+//remove the first two dates which are the range - this needs steadying
+//i am working off the unconfirmed assumption that the date range will
+//always be the first two elements of the allDates array.
+const appointmentDates = allDates.splice(2);
+
+
+const formatTime = time => {
+	const oneTime = time.split(':');
+	formattedHour = oneTime[0];
+	formattedMinute = oneTime[1];
+	let result;
+	if (formattedHour < 18) {
+		result = [formattedHour, formattedMinute];
+	}
+	return {result};
+}
 
 //format the date to ics format
 // { weeks, days, hours, minutes, seconds }
@@ -32,15 +53,27 @@ const formatDate = date => {
 	});
 	return result;
 };
-console.log(formatDate(allDates[0]), 'what');
 
 //start populating everything into an object for createEvent()
+//another perhaps more readable way to do this
 const populateEvent = new Object();
 populateEvent.title = 'test';
 populateEvent.description = 'description';
 populateEvent.start = formatDate(allDates[0]);
 populateEvent.duration = { minutes: 15 }
 populateEvent.productId = 'mork';
+
+let diaryEvents = [];
+for (let i=0; i < appointmentDates.length; i++) {
+	diaryEvents[i] = {
+		title: '',
+		description: '',
+		start: formatDate(appointmentDates[i]),
+		duration: { minutes: 15 },
+		productId: 'mork',
+	}
+};
+console.log(diaryEvents, 'what we get?');
 
 //a sample event to test with
 const sampleStockEvent =   {

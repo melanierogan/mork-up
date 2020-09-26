@@ -22,6 +22,7 @@
   "dependencies": {
     "fs": "0.0.1-security",
     "ics": "^2.24.0",
+    "lodash": "^4.17.20",
     "optiic": "0.0.6"
   }
 }
