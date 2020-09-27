@@ -22,16 +22,17 @@
   "author": "melanie rogan",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.761.0",
     "body-parser": "^1.19.0",
     "connect-multiparty": "^2.2.0",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-handlebars": "^5.1.0",
     "fs": "0.0.1-security",
     "ics": "^2.24.0",
     "multer": "^1.4.2",
     "optiic": "0.0.6",
-    "path": "^0.12.7",
-    "dotenv": "^8.2.0"
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"
