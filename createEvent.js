@@ -4,7 +4,6 @@ const { writeFileSync } = require('fs');
 const createEvent = resolved => {
 	try {
 		console.log('>>>> NOW TRYING <<<<<<<');
-		// const resolved = processImage(image);
 		//do the work to get all the dates, times, location, description information
 		const allDates = resolved.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
 		const dateRange = resolved.text.match(
@@ -13,6 +12,7 @@ const createEvent = resolved => {
 		const dateRangeArray = dateRange[0].split(' to ');
 
 		const allTimes = resolved.text.match(/\d{2}([\:])\d{2}/g);
+		//hard coded based on knowing set description
 		const allDescriptions = resolved.text.match(/Quinn IMRT/g);
 		const eachLineInArray = resolved.text.split('\n');
 		const replaceNewline = resolved.text.replace(/\n/g, ' ');
@@ -24,7 +24,7 @@ const createEvent = resolved => {
 		);
 
 		//i am working off the unconfirmed assumption that the date range will
-		//always be the first two elements of the allDates array.
+		//always be the first two elements of the allDates array
 		const appointmentDates = allDates.splice(2);
 		const appointmentTimes = allTimes.splice(1);
 
@@ -94,7 +94,7 @@ const createEvent = resolved => {
 
 		//what do we get when we run
 		console.log(value);
-		writeFileSync(`${__dirname}/events/event.ics`, value);
+		writeFileSync(`${__dirname}/public/events/event.ics`, value);
 	} catch (error) {
 		console.log(error);
 	}

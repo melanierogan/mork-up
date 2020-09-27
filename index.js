@@ -3,8 +3,6 @@ const express = require('express');
 const app = express();
 const exphbs = require('express-handlebars');
 const { processImage } = require('./convertImage');
-// const fileUpload = require('express-fileupload');
-// app.use(fileUpload({ safeFileNames: true, preserveExtension: true }));
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const path = require('path');
@@ -12,7 +10,7 @@ const helpers = require('./helpers');
 
 const storage = multer.diskStorage({
 	destination: function(req, file, cb) {
-		cb(null, 'images/');
+		cb(null, 'public/images/');
 	},
 
 	// By default, multer removes file extensions so let's add them back
@@ -27,8 +25,7 @@ const storage = multer.diskStorage({
 // support parsing of application/json type post data
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use('/images', express.static(__dirname + '/images'));
-app.use('/events', express.static(__dirname + '/events'));
+app.use('/public', express.static(__dirname + '/public'));
 
 app.set('view engine', '.html');
 app.set('views', __dirname + '/views');
@@ -65,7 +62,6 @@ app.post('/upload', async (req, res) => {
 
 		// Display uploaded image for user validation
 		const processUploadImage = req.file.path;
-		console.log(processUploadImage, 'what we got');
 		const textResult = await processImage(processUploadImage);
 		console.log(textResult, 'when i am ready');
 		createEvent(textResult);
