@@ -65,7 +65,7 @@ app.post('/upload', async (req, res) => {
 		const textResult = await processImage(processUploadImage);
 		console.log(textResult, 'when i am ready');
 		createEvent(textResult);
-		const downloadIcs = './events/event.ics';
+		const downloadIcs = '/public/events/event.ics';
 		res.send(
 			`You have uploaded this image: <hr/><img src="${req.file.path}" width="500"><hr /><a href="${downloadIcs}">Download calendar file</a>`,
 		);
