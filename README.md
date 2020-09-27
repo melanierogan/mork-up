@@ -10,4 +10,4 @@ Though the app can read text off any image with ooptic, the logic in processing 
 
 Here is a sample of a photo taken of one such sheet:
 
-![appointment_sheet](https://user-images.githubusercontent.com/16557524/94365294-8c767f00-00c7-11eb-948a-ce0034d3f11a.JPG)
+<img src="https://user-images.githubusercontent.com/16557524/94365294-8c767f00-00c7-11eb-948a-ce0034d3f11a.JPG" width="60%" title="appointment_sheet">
