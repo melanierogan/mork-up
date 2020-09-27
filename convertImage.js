@@ -1,15 +1,23 @@
+require('dotenv').config({
+	silent: true,
+});
+
 const optiic = new (require('optiic'))({
-	apiKey: 'api_adedc6b7-f043-45ce-b718-5701311741da', // Not required, but having one removes limits (get your key at https://optiic.dev).
+	apiKey: process.env.OPTIIC_API_KEY, // Not required, but having one removes limits (get your key at https://optiic.dev).
 });
 
-let options = {
-	image: './images/test5.JPG',
-	// image: 'https://via.placeholder.com/468x60?text=Sample+text',
-	mode: 'ocr', // ocr
+const processImage = async image => {
+	let options = {
+		image: `./${image}`,
+		mode: 'ocr', // ocr
+	};
+	try {
+		const result = await optiic.process(options);
+		console.log(result, 'the image text');
+		return result;
+	} catch (error) {
+		console.log(error);
+	}
 };
-
-let processImage = optiic.process(options).then(result => {
-	return result;
-});
 
 module.exports = { processImage };

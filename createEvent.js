@@ -1,12 +1,10 @@
 const ics = require('ics');
-const { processImage } = require('./convertImage');
 const { writeFileSync } = require('fs');
 
-const createEvent = async () => {
+const createEvent = resolved => {
 	try {
 		console.log('>>>> NOW TRYING <<<<<<<');
-		const resolved = await processImage;
-		console.log(resolved, 'what we get');
+		// const resolved = processImage(image);
 		//do the work to get all the dates, times, location, description information
 		const allDates = resolved.text.match(/\d{2}([\/.-])\d{2}\1\d{4}/g);
 		const dateRange = resolved.text.match(
@@ -95,7 +93,7 @@ const createEvent = async () => {
 		}
 
 		//what do we get when we run
-		console.log(value)
+		console.log(value);
 		writeFileSync(`${__dirname}/events/event.ics`, value);
 	} catch (error) {
 		console.log(error);
